@@ -1,0 +1,9 @@
+.App { text-align: center; }
+.App-header { background-color: #282c34; padding: 20px; color: white; margin-bottom: 2rem; }
+button { font-size: 1rem; padding: 10px 20px; margin: 5px; cursor: pointer; }
+.form { display: flex; flex-direction: column; max-width: 500px; margin: auto; gap: 10px; }
+input, textarea { padding: 10px; font-size: 1rem; }
+textarea { min-height: 80px; }
+.messages { margin-top: 2rem; }
+.message-card { border: 1px solid #ddd; padding: 15px; max-width: 500px; margin: 10px auto; text-align: left; border-radius: 8px; }
+.message-card h3 { margin-top: 0; }
