@@ -1,0 +1,100 @@
+module billboard::billboard {
+    use std::error;
+    use std::signer;
+    use std::string::String;
+    use std::vector;
+    use aptos_framework::event;
+
+    // We add a 'title' field to our Message struct.
+    struct Message has store, drop, copy {
+        title: String,      // NEW!
+        content: String,
+        author: address,
+    }
+
+    struct Billboard has key {
+        messages: vector<Message>,
+        message_limit: u64,
+    }
+
+    // Also add the 'title' to our event so apps can see it.
+    #[event]
+    struct MessageAdded has drop, store {
+        author: address,
+        title: String,      // NEW!
+        content: String,
+    }
+
+    const EBILLBOARD_NOT_INITIALIZED: u64 = 1;
+    const EBILLBOARD_ALREADY_EXISTS: u64 = 2;
+
+    public entry fun initialize_billboard(account: &signer, message_limit: u64) {
+        let account_addr = signer::address_of(account);
+        assert!(!exists<Billboard>(account_addr), error::already_exists(EBILLBOARD_ALREADY_EXISTS));
+
+        move_to(account, Billboard {
+            messages: vector::empty<Message>(),
+            message_limit,
+        });
+    }
+
+    // Update send_message to accept a 'title' as input.
+    public entry fun send_message(
+        sender: &signer,
+        billboard_address: address,
+        title: String,      // NEW!
+        content: String,
+    ) acquires Billboard {
+        assert!(exists<Billboard>(billboard_address), error::not_found(EBILLBOARD_NOT_INITIALIZED));
+
+        let billboard = borrow_global_mut<Billboard>(billboard_address);
+        let sender_address = signer::address_of(sender);
+
+        // Create the message with the new title field.
+        let message = Message {
+            title,          // NEW!
+            content,
+            author: sender_address,
+        };
+
+        if (vector::length(&billboard.messages) >= billboard.message_limit) {
+            vector::remove(&mut billboard.messages, 0);
+        };
+
+        vector::push_back(&mut billboard.messages, message);
+
+        // Emit the event with the new title.
+        event::emit(MessageAdded {
+            author: sender_address,
+            title: message.title, // NEW!
+            content: message.content,
+        });
+    }
+
+    #[view]
+    public fun get_all_messages(billboard_address: address): vector<Message> acquires Billboard {
+        assert!(exists<Billboard>(billboard_address), error::not_found(EBILLBOARD_NOT_INITIALIZED));
+        *&borrow_global<Billboard>(billboard_address).messages
+    }
+
+    #[test_only]
+    use std::string;
+
+    #[test(account = @0x1)]
+    public entry fun test_billboard_flow(account: &signer) acquires Billboard {
+        initialize_billboard(account, 3);
+        let account_addr = signer::address_of(account);
+
+        // Update our test to send messages with titles.
+        send_message(account, account_addr, string::utf8(b"Title 1"), string::utf8(b"Hello Aptos!"));
+        send_message(account, account_addr, string::utf8(b"Title 2"), string::utf8(b"Move is fun!"));
+
+        let messages = get_all_messages(account_addr);
+        assert!(vector::length(&messages) == 2, 1);
+
+        send_message(account, account_addr, string::utf8(b"Title 3"), string::utf8(b"Third message"));
+        send_message(account, account_addr, string::utf8(b"Title 4"), string::utf8(b"Fourth message"));
+
+        assert!(vector::length(&get_all_messages(account_addr)) == 3, 2);
+    }
+}
