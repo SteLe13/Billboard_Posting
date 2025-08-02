@@ -3,7 +3,8 @@
 Welcome to my little corner of the blockchain! This is a simple, fully decentralized billboard application built on the **Aptos network**. It was created as a hands-on project to learn the fundamentals of building a full-stack **dApp**, from smart contract to front-end.
 
 > The application allows any user with an Aptos wallet to connect and post a public message for everyone to see.
-
+---
+Notice: file "Billboard-Smart_Contract-Aptos_Blockchain" is the smart contract protocol I have run to generate the contract address in file App.tsx
 ---
 
 ### ✨ Features
